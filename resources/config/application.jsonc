@@ -1,0 +1,7 @@
+{
+  "source": "",
+  "target": "",
+  "logger": {
+    "filename": "resources/log/rock-migrate.jsonl"
+  }
+}
