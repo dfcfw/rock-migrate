@@ -118,9 +118,10 @@ func Exec(ctx context.Context, cfg *profile.Config) error {
 	log.Info("开始创建完毕")
 
 	threatIPBiz := service.NewThreatIP(sourceThreatIP, targetThreatIP, log)
+	statusBiz := service.NewStatus(sourceStatus, targetStatus, log)
 
 	executor := execute.New(crontab, log)
-	executor.Add(ctx, threatIPBiz)
+	executor.Add(ctx, threatIPBiz, statusBiz)
 
 	logBiz := service.NewLog(logWriter, log)
 	shipRoutes := []shipx.RouteRegister{
