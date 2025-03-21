@@ -1,11 +1,15 @@
 package launch
 
-import "context"
+import (
+	"context"
 
-func Run(ctx context.Context) error {
+	"github.com/dfcfw/rock-migrate/profile"
+)
+
+func Run(ctx context.Context, fp string) error {
 	return nil
 }
 
-func Exec(ctx context.Context) error {
+func Exec(ctx context.Context, cfg *profile.Config) error {
 	return nil
 }
