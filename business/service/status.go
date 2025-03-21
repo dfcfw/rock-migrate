@@ -9,7 +9,6 @@ import (
 	"github.com/dfcfw/rock-migrate/business/execute"
 	"github.com/dfcfw/rock-migrate/datalayer/repository"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func NewStatus(source, target repository.Status, log *slog.Logger) *Status {
@@ -45,22 +44,23 @@ func (sts *Status) exec(parent context.Context) error {
 	defer cancel()
 
 	// 查询目的数据库最新数据
-	var lastAt time.Time
-	opt := options.FindOne().
-		SetSort(bson.D{{Key: "time", Value: -1}})
-	if last, _ := sts.target.FindOne(ctx, bson.M{}, opt); last != nil {
-		lastAt = last.Time
-	}
+	//var lastAt time.Time
+	//opt := options.FindOne().
+	//	SetSort(bson.D{{Key: "time", Value: -1}})
+	//if last, _ := sts.target.FindOne(ctx, bson.M{}, opt); last != nil {
+	//	lastAt = last.Time
+	//}
+	//
+	//// 最早不过 180 天
+	//day180 := time.Now().Add(-180 * 24 * time.Hour)
+	//if lastAt.Before(day180) {
+	//	lastAt = day180
+	//}
 
-	// 最早不过 180 天
-	day180 := time.Now().Add(-180 * 24 * time.Hour)
-	if lastAt.Before(day180) {
-		lastAt = day180
-	}
-
+	lastAt := time.Now().Add(-time.Hour)
 	var cnt int
 	attrs := []any{slog.Time("after_at", lastAt)}
-	filter := bson.M{"time": bson.M{"$gt": lastAt}}
+	filter := bson.M{"time": bson.M{"$gte": lastAt}}
 	for ips, err := range sts.source.All(ctx, filter, 100) {
 		if err != nil {
 			return err
