@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/dfcfw/rock-migrate/business"
-	"github.com/dfcfw/rock-migrate/business/cronfunc"
+	"github.com/dfcfw/rock-migrate/business/execute"
+	"github.com/dfcfw/rock-migrate/business/service"
 	"github.com/dfcfw/rock-migrate/datalayer/repository"
 	"github.com/dfcfw/rock-migrate/handler/middle"
 	"github.com/dfcfw/rock-migrate/handler/restapi"
@@ -104,9 +104,12 @@ func Exec(ctx context.Context, cfg *profile.Config) error {
 
 	sourceThreatIP := repository.NewThreatIP(sourceDB)
 	targetThreatIP := repository.NewThreatIP(targetDB)
+	sourceStatus := repository.NewStatus(sourceDB)
+	targetStatus := repository.NewStatus(targetDB)
 
 	indexes := []repository.IndexCreator{
 		targetThreatIP,
+		targetStatus,
 	}
 	log.Info("开始创建索引")
 	if err := repository.CreateIndex(ctx, indexes); err != nil {
@@ -114,10 +117,12 @@ func Exec(ctx context.Context, cfg *profile.Config) error {
 	}
 	log.Info("开始创建完毕")
 
-	threatIPBiz := business.NewThreatIP(sourceThreatIP, targetThreatIP, log)
-	cronfunc.Add(crontab, []cronfunc.CronInfo{threatIPBiz.Cron()})
+	threatIPBiz := service.NewThreatIP(sourceThreatIP, targetThreatIP, log)
 
-	logBiz := business.NewLog(logWriter, log)
+	executor := execute.New(crontab, log)
+	executor.Add(ctx, threatIPBiz)
+
+	logBiz := service.NewLog(logWriter, log)
 	shipRoutes := []shipx.RouteRegister{
 		restapi.NewLog(logBiz),
 	}

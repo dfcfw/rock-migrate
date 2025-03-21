@@ -24,9 +24,7 @@ type threatIPRepo struct {
 }
 
 func (repo *threatIPRepo) CreateIndex(ctx context.Context) error {
-	idx := mongo.IndexModel{
-		Keys: bson.D{{Key: "last_at", Value: -1}},
-	}
+	idx := mongo.IndexModel{Keys: bson.D{{Key: "last_at", Value: -1}}}
 	_, err := repo.Indexes().CreateOne(ctx, idx)
 
 	return err

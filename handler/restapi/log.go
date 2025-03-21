@@ -3,19 +3,19 @@ package restapi
 import (
 	"sync/atomic"
 
-	"github.com/dfcfw/rock-migrate/business"
+	"github.com/dfcfw/rock-migrate/business/service"
 	"github.com/dfcfw/rock-migrate/library/eventsource"
 	"github.com/xgfone/ship/v5"
 )
 
-func NewLog(biz *business.Log) *Log {
+func NewLog(biz *service.Log) *Log {
 	return &Log{
 		biz: biz,
 	}
 }
 
 type Log struct {
-	biz *business.Log
+	biz *service.Log
 	lim atomic.Int32
 }
 

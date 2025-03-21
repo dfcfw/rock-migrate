@@ -156,7 +156,7 @@ func (br *baseRepository[T]) FindPage(ctx context.Context, filter any, page, siz
 func (br *baseRepository[T]) All(ctx context.Context, filter any, limit int64, opts ...options.Lister[options.FindOptions]) iter.Seq2[[]*T, error] {
 	return func(yield func([]*T, error) bool) {
 		var skip int64
-		opt := options.Find().SetLimit(limit).SetSort(bson.D{{Key: "_id", Value: 1}})
+		opt := options.Find().SetLimit(limit)
 		for {
 			opt.SetSkip(skip)
 			optis := append(opts, opt)
