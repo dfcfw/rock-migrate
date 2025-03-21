@@ -66,7 +66,7 @@ type Flow struct {
 	Uidal         string        `json:"uidal"          bson:"uidal"`          // 大数据设备指纹	大数据指纹埋点字段
 	Uname         string        `json:"uname"          bson:"uname"`          // upstream 名称，后端服务器分组名称（上游名）
 	URI           string        `json:"uri"            bson:"uri"`            // 改写后的请求路径
-	URT           int           `json:"urt"            bson:"urt"`            // upstream 响应时间，后端服务器响应时间，单位:ms
+	URT           float64       `json:"urt"            bson:"urt"`            // upstream 响应时间，后端服务器响应时间，单位:ms
 	UserID        string        `json:"userid"         bson:"userid"`         // 请求的用户 ID，在基金活动中用到
 	UToken        string        `json:"utoken"         bson:"utoken"`         // 通行证登录 utoken
 	WARN          string        `json:"warn"           bson:"warn"`           // 请求风险字段，命中的标记模式安全规则
