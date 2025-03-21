@@ -52,11 +52,11 @@ func (flw *Flow) exec(parent context.Context) error {
 		lastAt = time.UnixMilli(last.Time)
 	}
 
-	// 最早不过 30 天
-	//day30 := time.Now().Add(-30 * 24 * time.Hour)
-	//if lastAt.Before(day30) {
-	//	lastAt = day30
-	//}
+	// 最早不过 180 天
+	day180 := time.Now().Add(-180 * 24 * time.Hour)
+	if lastAt.Before(day180) {
+		lastAt = day180
+	}
 
 	var cnt int
 	attrs := []any{slog.Time("after_at", lastAt)}

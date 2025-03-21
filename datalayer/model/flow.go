@@ -47,7 +47,7 @@ type Flow struct {
 	Reqs          string        `json:"reqs"           bson:"reqs"`           // 同一个tcp连接中的请求个数
 	Response      string        `json:"response"       bson:"response"`       // 响应报文
 	Risk          string        `json:"risk"           bson:"risk"`           // 请求风险
-	RT            int           `json:"rt"             bson:"rt"`             // 请求耗时	从WAF接收到用户请求到处理完成的时间，包含后端响应时间，单位:ms
+	RT            float64       `json:"rt"             bson:"rt"`             // 请求耗时	从WAF接收到用户请求到处理完成的时间，包含后端响应时间，单位:ms
 	Rule          string        `json:"rule"           bson:"rule"`           // 拦截规则	rule为down时，表示所有后端节点均不在线，请求被转发到peer(返回403)
 	SAddr         string        `json:"saddr"          bson:"saddr"`          // Server Addr	处理该请求的WAF节点地址
 	Scheme        string        `json:"scheme"         bson:"scheme"`         // http 请求协议：http/https
