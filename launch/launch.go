@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dfcfw/rock-migrate/business"
+	"github.com/dfcfw/rock-migrate/business/cronfunc"
 	"github.com/dfcfw/rock-migrate/datalayer/repository"
 	"github.com/dfcfw/rock-migrate/handler/middle"
 	"github.com/dfcfw/rock-migrate/handler/restapi"
@@ -16,7 +17,6 @@ import (
 	"github.com/dfcfw/rock-migrate/library/dynwriter"
 	"github.com/dfcfw/rock-migrate/logger"
 	"github.com/dfcfw/rock-migrate/profile"
-	"github.com/robfig/cron/v3"
 	"github.com/xgfone/ship/v5"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -98,7 +98,7 @@ func Exec(ctx context.Context, cfg *profile.Config) error {
 	}
 
 	cronLog := slog.New(logger.Skip(logHandler, 5))
-	crontab := cronv3.New(cronLog, cron.WithSeconds())
+	crontab := cronv3.New(cronLog)
 	crontab.Start()
 	defer crontab.Stop()
 
@@ -115,7 +115,7 @@ func Exec(ctx context.Context, cfg *profile.Config) error {
 	log.Info("开始创建完毕")
 
 	threatIPBiz := business.NewThreatIP(sourceThreatIP, targetThreatIP, log)
-	_ = threatIPBiz
+	cronfunc.Add(crontab, []cronfunc.CronInfo{threatIPBiz.Cron()})
 
 	logBiz := business.NewLog(logWriter, log)
 	shipRoutes := []shipx.RouteRegister{

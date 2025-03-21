@@ -25,14 +25,17 @@ type Crontab struct {
 }
 
 func (c *Crontab) Start() {
+	c.log.Warn("异步运行 crontab")
 	c.crond.Start()
 }
 
 func (c *Crontab) Run() {
+	c.log.Warn("同步运行 crontab")
 	c.crond.Run()
 }
 
 func (c *Crontab) Stop() context.Context {
+	c.log.Warn("停止 crontab")
 	return c.crond.Stop()
 }
 
@@ -40,66 +43,80 @@ func (c *Crontab) Location() *time.Location {
 	return c.crond.Location()
 }
 
-func (c *Crontab) AddFunc(name, spec string, cmd func()) error {
-	return c.AddJob(name, spec, cron.FuncJob(cmd))
-}
-
-func (c *Crontab) AddJob(name string, spec string, job cron.Job) error {
-	c.log.Info("添加或修改定时任务", slog.String("name", name))
-	wrapJob := c.wrapperJob(name, job.Run)
+func (c *Crontab) AddJob(name string, spec string, cmd func()) error {
+	exec := c.withLogFunc(name, cmd)
+	attrs := []any{slog.String("name", name), slog.String("spec", spec)}
 
 	c.mutex.Lock()
-	defer c.mutex.Unlock()
-
-	if id, ok := c.names[name]; ok {
-		c.crond.Remove(id)
-	}
-	id, err := c.crond.AddJob(spec, wrapJob)
+	exists := c.remove(name)
+	id, err := c.crond.AddJob(spec, exec)
 	if err == nil {
 		c.names[name] = id
+	}
+	c.mutex.Unlock()
+	if err != nil {
+		if exists {
+			c.log.Warn("修改定时任务失败导致原来的任务被删除", attrs...)
+		}
+		return err
+	}
+
+	if exists {
+		c.log.Warn("修改定时任务", attrs...)
+	} else {
+		c.log.Info("新增定时任务", attrs...)
 	}
 
 	return err
 }
 
-func (c *Crontab) Schedule(name string, sch cron.Schedule, job func()) {
-	c.log.Info("添加或修改定时任务", slog.String("name", name))
-	wrapJob := c.wrapperJob(name, job)
+func (c *Crontab) Schedule(name string, sch cron.Schedule, job cron.Job) {
+	exec := c.withLogJob(name, job)
 
 	c.mutex.Lock()
-	defer c.mutex.Unlock()
-
-	if id, ok := c.names[name]; ok {
-		c.crond.Remove(id)
-	}
-	id := c.crond.Schedule(sch, wrapJob)
+	exists := c.remove(name)
+	id := c.crond.Schedule(sch, exec)
 	c.names[name] = id
+	c.mutex.Unlock()
+
+	attrs := []any{slog.String("name", name)}
+	if exists {
+		c.log.Warn("修改定时任务", attrs...)
+	} else {
+		c.log.Info("新增定时任务", attrs...)
+	}
 }
 
-func (c *Crontab) Remove(name string) {
+func (c *Crontab) Remove(name string) bool {
 	c.mutex.Lock()
-	defer c.mutex.Unlock()
+	exists := c.remove(name)
+	c.mutex.Unlock()
 
+	return exists
+}
+
+func (c *Crontab) remove(name string) bool {
 	if id, ok := c.names[name]; ok {
 		c.crond.Remove(id)
 		delete(c.names, name)
-		c.log.Warn("删除定时任务", slog.String("name", name))
+		return true
 	}
+
+	return false
 }
 
-// Cleanup 清理哪些不再执行的定时任务，该功能主要针对 [NewTimingSchedule] 类型的定时任务。
 func (c *Crontab) Cleanup() {
 	for _, ent := range c.crond.Entries() {
 		if !ent.Next.IsZero() {
 			continue
 		}
-		if name := c.resolveName(ent.ID); name != "" {
+		if name := c.lookupName(ent.ID); name != "" {
 			c.Remove(name)
 		}
 	}
 }
 
-func (c *Crontab) resolveName(id cron.EntryID) string {
+func (c *Crontab) lookupName(id cron.EntryID) string {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -112,10 +129,14 @@ func (c *Crontab) resolveName(id cron.EntryID) string {
 	return ""
 }
 
-func (c *Crontab) wrapperJob(name string, job func()) cron.Job {
-	return cron.FuncJob(func() {
+func (c *Crontab) withLogFunc(name string, cmd func()) cron.FuncJob {
+	return c.withLogJob(name, cron.FuncJob(cmd))
+}
+
+func (c *Crontab) withLogJob(name string, job cron.Job) cron.FuncJob {
+	return func() {
 		c.log.Info("定时任务开始执行", slog.String("name", name))
-		job()
+		job.Run()
 		c.log.Info("定时任务执行结束", slog.String("name", name))
-	})
+	}
 }

@@ -153,10 +153,14 @@ func (br *baseRepository[T]) FindPage(ctx context.Context, filter any, page, siz
 	return pages, nil
 }
 
-func (br *baseRepository[T]) All(ctx context.Context, filter any, opts ...options.Lister[options.FindOptions]) iter.Seq2[[]*T, error] {
+func (br *baseRepository[T]) All(ctx context.Context, filter any, limit int64, opts ...options.Lister[options.FindOptions]) iter.Seq2[[]*T, error] {
 	return func(yield func([]*T, error) bool) {
+		var skip int64
+		opt := options.Find().SetLimit(limit).SetSort(bson.D{{Key: "_id", Value: 1}})
 		for {
-			cur, err := br.coll.Find(ctx, filter, opts...)
+			opt.SetSkip(skip)
+			optis := append(opts, opt)
+			cur, err := br.coll.Find(ctx, filter, optis...)
 			if err != nil {
 				yield(nil, err)
 				break
@@ -166,9 +170,11 @@ func (br *baseRepository[T]) All(ctx context.Context, filter any, opts ...option
 				yield(nil, err)
 				break
 			}
-			if len(ts) == 0 {
+			num := len(ts)
+			if num == 0 {
 				break
 			}
+			skip += int64(num)
 			if !yield(ts, nil) {
 				break
 			}

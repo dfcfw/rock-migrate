@@ -278,7 +278,7 @@ type Repository[T any] interface {
 
 	FindPage(ctx context.Context, filter any, page, size int64, opts ...options.Lister[options.FindOptions]) (*Pages[T], error)
 
-	All(ctx context.Context, filter any, opts ...options.Lister[options.FindOptions]) iter.Seq2[[]*T, error]
+	All(ctx context.Context, filter any, limit int64, opts ...options.Lister[options.FindOptions]) iter.Seq2[[]*T, error]
 
 	IndexCreator
 }
