@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"iter"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -276,6 +277,8 @@ type Repository[T any] interface {
 	FindByID(ctx context.Context, id any, opts ...options.Lister[options.FindOneOptions]) (*T, error)
 
 	FindPage(ctx context.Context, filter any, page, size int64, opts ...options.Lister[options.FindOptions]) (*Pages[T], error)
+
+	All(ctx context.Context, filter any, opts ...options.Lister[options.FindOptions]) iter.Seq2[[]*T, error]
 
 	IndexCreator
 }

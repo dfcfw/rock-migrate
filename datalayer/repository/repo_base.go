@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"iter"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -150,6 +151,29 @@ func (br *baseRepository[T]) FindPage(ctx context.Context, filter any, page, siz
 	pages.Total, pages.Records = cnt, ts
 
 	return pages, nil
+}
+
+func (br *baseRepository[T]) All(ctx context.Context, filter any, opts ...options.Lister[options.FindOptions]) iter.Seq2[[]*T, error] {
+	return func(yield func([]*T, error) bool) {
+		for {
+			cur, err := br.coll.Find(ctx, filter, opts...)
+			if err != nil {
+				yield(nil, err)
+				break
+			}
+			ts, err := br.decodeCursor(ctx, cur)
+			if err != nil {
+				yield(nil, err)
+				break
+			}
+			if len(ts) == 0 {
+				break
+			}
+			if !yield(ts, nil) {
+				break
+			}
+		}
+	}
 }
 
 func (*baseRepository[T]) decodeSingleResult(ret *mongo.SingleResult) (*T, error) {

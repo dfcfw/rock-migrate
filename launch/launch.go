@@ -7,11 +7,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/dfcfw/rock-migrate/handler/middle"
-
-	"github.com/dfcfw/rock-migrate/datalayer/repository"
-
 	"github.com/dfcfw/rock-migrate/business"
+	"github.com/dfcfw/rock-migrate/datalayer/repository"
+	"github.com/dfcfw/rock-migrate/handler/middle"
 	"github.com/dfcfw/rock-migrate/handler/restapi"
 	"github.com/dfcfw/rock-migrate/handler/shipx"
 	"github.com/dfcfw/rock-migrate/library/cronv3"
@@ -61,6 +59,7 @@ func Exec(ctx context.Context, cfg *profile.Config) error {
 	var sourceDB, targetDB *mongo.Database
 	dbCfg := cfg.Database
 	{
+		log.Info("开始连接源数据库")
 		mongoURI := dbCfg.Source
 		mongoURL, err := connstring.ParseAndValidate(mongoURI)
 		if err != nil {
@@ -71,12 +70,15 @@ func Exec(ctx context.Context, cfg *profile.Config) error {
 			SetLoggerOptions(mongoLogOpt)
 		cli, err := mongo.Connect(mongoOpt)
 		if err != nil {
+			log.Error("连接源数据库出错", slog.Any("error", err))
 			return err
 		}
 		defer disconnectDB(cli, 10*time.Second)
 		sourceDB = cli.Database(mongoURL.Database)
+		log.Info("连接源数据库成功")
 	}
 	{
+		log.Info("开始连接目的数据库")
 		mongoURI := dbCfg.Target
 		mongoURL, err := connstring.ParseAndValidate(mongoURI)
 		if err != nil {
@@ -87,10 +89,12 @@ func Exec(ctx context.Context, cfg *profile.Config) error {
 			SetLoggerOptions(mongoLogOpt)
 		cli, err := mongo.Connect(mongoOpt)
 		if err != nil {
+			log.Error("连接目的数据库出错", slog.Any("error", err))
 			return err
 		}
 		defer disconnectDB(cli, 10*time.Second)
 		targetDB = cli.Database(mongoURL.Database)
+		log.Info("连接目的数据库成功")
 	}
 
 	cronLog := slog.New(logger.Skip(logHandler, 5))
@@ -100,7 +104,18 @@ func Exec(ctx context.Context, cfg *profile.Config) error {
 
 	sourceThreatIP := repository.NewThreatIP(sourceDB)
 	targetThreatIP := repository.NewThreatIP(targetDB)
-	_, _ = sourceThreatIP, targetThreatIP
+
+	indexes := []repository.IndexCreator{
+		targetThreatIP,
+	}
+	log.Info("开始创建索引")
+	if err := repository.CreateIndex(ctx, indexes); err != nil {
+		return err
+	}
+	log.Info("开始创建完毕")
+
+	threatIPBiz := business.NewThreatIP(sourceThreatIP, targetThreatIP, log)
+	_ = threatIPBiz
 
 	logBiz := business.NewLog(logWriter, log)
 	shipRoutes := []shipx.RouteRegister{
