@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"go.mongodb.org/mongo-driver/mongo/options"
+
 	"github.com/dfcfw/rock-migrate/business/execute"
 	"github.com/dfcfw/rock-migrate/datalayer/repository"
 	"go.mongodb.org/mongo-driver/bson"
@@ -66,7 +68,8 @@ func (sts *Status) exec(parent context.Context) error {
 			return err
 		}
 		cnt += len(ips)
-		_, _ = sts.target.InsertMany(ctx, ips)
+		opt := options.InsertMany().SetOrdered(false)
+		_, _ = sts.target.InsertMany(ctx, ips, opt)
 	}
 	attrs = append(attrs, slog.Int("count", cnt))
 	sts.log.Info("定时状态统计数据同步", attrs...)
