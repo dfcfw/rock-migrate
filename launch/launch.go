@@ -18,9 +18,9 @@ import (
 	"github.com/dfcfw/rock-migrate/logger"
 	"github.com/dfcfw/rock-migrate/profile"
 	"github.com/xgfone/ship/v5"
-	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
-	"go.mongodb.org/mongo-driver/v2/x/mongo/driver/connstring"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
 )
 
 func Run(ctx context.Context, fp string) error {
@@ -52,10 +52,6 @@ func Exec(ctx context.Context, cfg *profile.Config) error {
 	logHandler := slog.NewJSONHandler(logWriter, logOpt)
 	log := slog.New(logHandler)
 
-	// 连接数据库
-	mongoLogOpt := options.Logger().
-		SetSink(logger.NewSink(logHandler, 13)).
-		SetComponentLevel(options.LogComponentCommand, options.LogLevelDebug)
 	var sourceDB, targetDB *mongo.Database
 	dbCfg := cfg.Database
 	{
@@ -66,9 +62,8 @@ func Exec(ctx context.Context, cfg *profile.Config) error {
 			return err
 		}
 		mongoOpt := options.Client().
-			ApplyURI(mongoURI).
-			SetLoggerOptions(mongoLogOpt)
-		cli, err := mongo.Connect(mongoOpt)
+			ApplyURI(mongoURI)
+		cli, err := mongo.Connect(ctx, mongoOpt)
 		if err != nil {
 			log.Error("连接源数据库出错", slog.Any("error", err))
 			return err
@@ -85,9 +80,8 @@ func Exec(ctx context.Context, cfg *profile.Config) error {
 			return err
 		}
 		mongoOpt := options.Client().
-			ApplyURI(mongoURI).
-			SetLoggerOptions(mongoLogOpt)
-		cli, err := mongo.Connect(mongoOpt)
+			ApplyURI(mongoURI)
+		cli, err := mongo.Connect(ctx, mongoOpt)
 		if err != nil {
 			log.Error("连接目的数据库出错", slog.Any("error", err))
 			return err

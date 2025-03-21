@@ -6,11 +6,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
-
 	"github.com/dfcfw/rock-migrate/business/execute"
 	"github.com/dfcfw/rock-migrate/datalayer/repository"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func NewStatus(source, target repository.Status, log *slog.Logger) *Status {

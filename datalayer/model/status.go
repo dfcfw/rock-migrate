@@ -3,21 +3,21 @@ package model
 import (
 	"time"
 
-	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Status struct {
-	ID      bson.ObjectID `bson:"_id,omitempty"`
-	Time5   int64         `bson:"time5,omitempty"`
-	Time30  int64         `bson:"time30,omitempty"`
-	Time60  int64         `bson:"time60,omitempty"`
-	Uuid    string        `bson:"uuid,omitempty"`
-	Type    string        `bson:"type,omitempty"`
-	Name    string        `bson:"name,omitempty"`
-	Cluster string        `bson:"cluster,omitempty"`
-	Private string        `bson:"private,omitempty"`
-	Time    time.Time     `bson:"time,omitempty"`
-	Status  StatusItem    `bson:"status,omitempty"`
+	ID      primitive.ObjectID `bson:"_id,omitempty"`
+	Time5   int64              `bson:"time5,omitempty"`
+	Time30  int64              `bson:"time30,omitempty"`
+	Time60  int64              `bson:"time60,omitempty"`
+	Uuid    string             `bson:"uuid,omitempty"`
+	Type    string             `bson:"type,omitempty"`
+	Name    string             `bson:"name,omitempty"`
+	Cluster string             `bson:"cluster,omitempty"`
+	Private string             `bson:"private,omitempty"`
+	Time    time.Time          `bson:"time,omitempty"`
+	Status  StatusItem         `bson:"status,omitempty"`
 }
 
 type StatusItem struct {

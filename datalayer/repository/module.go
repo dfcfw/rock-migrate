@@ -2,7 +2,7 @@ package repository
 
 import (
 	"github.com/dfcfw/rock-migrate/datalayer/model"
-	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Module interface {

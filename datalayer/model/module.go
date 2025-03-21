@@ -3,15 +3,15 @@ package model
 import (
 	"time"
 
-	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Module struct {
-	ID           bson.ObjectID       `bson:"_id,omitempty"       json:"id"`
+	ID           primitive.ObjectID  `bson:"_id,omitempty"       json:"id"`
 	Args         []map[string]string `bson:"args"                json:"args"`
-	Code         bson.Binary         `bson:"code,omitempty"      json:"-"`
+	Code         primitive.Binary    `bson:"code,omitempty"      json:"-"`
 	CreateAt     time.Time           `bson:"create_at,omitempty" json:"create_at"`
-	Data         bson.Binary         `bson:"data,omitempty"      json:"-"`
+	Data         primitive.Binary    `bson:"data,omitempty"      json:"-"`
 	Hash         string              `bson:"hash,omitempty"      json:"hash"`
 	Label        string              `bson:"label,omitempty"     json:"label"`
 	UpdateAt     time.Time           `bson:"update_at,omitempty" json:"update_at"`
