@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"sync/atomic"
 	"time"
@@ -13,36 +12,34 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-var ErrTaskRunning = errors.New("任务已经在运行")
-
-func NewThreatIP(source, target repository.ThreatIP, log *slog.Logger) *ThreatIP {
-	return &ThreatIP{
+func NewFlow(source repository.Flow, target repository.Flow, log *slog.Logger) *Flow {
+	return &Flow{
 		source: source,
 		target: target,
 		log:    log,
 	}
 }
 
-type ThreatIP struct {
-	source  repository.ThreatIP
-	target  repository.ThreatIP
+type Flow struct {
+	source  repository.Flow
+	target  repository.Flow
 	log     *slog.Logger
 	syncing atomic.Bool
 }
 
-func (tip *ThreatIP) Task() execute.TaskInfo {
+func (flw *Flow) Task() execute.TaskInfo {
 	return execute.TaskInfo{
-		Name: "[threat_ip] 恶意 IP 数据定时同步",
-		Func: tip.exec,
+		Name: "[flow] 定时同步流量统计数据",
+		Func: flw.exec,
 		Cron: time.Minute,
 	}
 }
 
-func (tip *ThreatIP) exec(parent context.Context) error {
-	if !tip.syncing.CompareAndSwap(false, true) {
+func (flw *Flow) exec(parent context.Context) error {
+	if !flw.syncing.CompareAndSwap(false, true) {
 		return ErrTaskRunning
 	}
-	defer tip.syncing.Store(false)
+	defer flw.syncing.Store(false)
 
 	ctx, cancel := context.WithTimeout(parent, 10*time.Minute)
 	defer cancel()
@@ -50,9 +47,9 @@ func (tip *ThreatIP) exec(parent context.Context) error {
 	// 查询目的数据库最新数据
 	var lastAt time.Time
 	opt := options.FindOne().
-		SetSort(bson.D{{Key: "last_at", Value: -1}})
-	if last, _ := tip.target.FindOne(ctx, bson.M{}, opt); last != nil {
-		lastAt = last.LastAt
+		SetSort(bson.D{{Key: "time", Value: -1}})
+	if last, _ := flw.target.FindOne(ctx, bson.M{}, opt); last != nil {
+		lastAt = time.UnixMilli(last.Time)
 	}
 
 	// 最早不过 30 天
@@ -63,16 +60,16 @@ func (tip *ThreatIP) exec(parent context.Context) error {
 
 	var cnt int
 	attrs := []any{slog.Time("after_at", lastAt)}
-	filter := bson.M{"last_at": bson.M{"$gt": lastAt}}
-	for ips, err := range tip.source.All(ctx, filter, 100) {
+	filter := bson.M{"time": bson.M{"$gt": lastAt.UnixMilli()}}
+	for ips, err := range flw.source.All(ctx, filter, 100) {
 		if err != nil {
 			return err
 		}
 		cnt += len(ips)
-		_, _ = tip.target.InsertMany(ctx, ips)
+		_, _ = flw.target.InsertMany(ctx, ips)
 	}
 	attrs = append(attrs, slog.Int("count", cnt))
-	tip.log.Info("恶意 IP 数据定时同步", attrs...)
+	flw.log.Info("定时同步流量统计数据", attrs...)
 
 	return nil
 }

@@ -106,6 +106,8 @@ func Exec(ctx context.Context, cfg *profile.Config) error {
 	targetThreatIP := repository.NewThreatIP(targetDB)
 	sourceStatus := repository.NewStatus(sourceDB)
 	targetStatus := repository.NewStatus(targetDB)
+	sourceFlow := repository.NewFlow(sourceDB)
+	targetFlow := repository.NewFlow(targetDB)
 
 	indexes := []repository.IndexCreator{
 		targetThreatIP,
@@ -119,9 +121,10 @@ func Exec(ctx context.Context, cfg *profile.Config) error {
 
 	threatIPBiz := service.NewThreatIP(sourceThreatIP, targetThreatIP, log)
 	statusBiz := service.NewStatus(sourceStatus, targetStatus, log)
+	flowBiz := service.NewFlow(sourceFlow, targetFlow, log)
 
 	executor := execute.New(crontab, log)
-	executor.Add(ctx, threatIPBiz, statusBiz)
+	executor.Add(ctx, threatIPBiz, statusBiz, flowBiz)
 
 	logBiz := service.NewLog(logWriter, log)
 	shipRoutes := []shipx.RouteRegister{
