@@ -13,8 +13,9 @@ type Database struct {
 }
 
 type Server struct {
-	Addr   string `json:"addr"   validate:"lte=100"`
-	Cert   string `json:"cert"   validate:"lte=255"`
-	Pkey   string `json:"pkey"   validate:"lte=255"`
-	Static string `json:"static" validate:"lte=255"`
+	Addr   string   `json:"addr"   validate:"lte=100"`
+	Cert   string   `json:"cert"   validate:"lte=255"`
+	Pkey   string   `json:"pkey"   validate:"lte=255"`
+	Static string   `json:"static" validate:"lte=255"`
+	Vhosts []string `json:"vhosts" validate:"lte=100"`
 }

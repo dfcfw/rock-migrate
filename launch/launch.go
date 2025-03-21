@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/dfcfw/rock-migrate/handler/middle"
+
 	"github.com/dfcfw/rock-migrate/datalayer/repository"
 
 	"github.com/dfcfw/rock-migrate/business"
@@ -105,17 +107,31 @@ func Exec(ctx context.Context, cfg *profile.Config) error {
 		restapi.NewLog(logBiz),
 	}
 
+	srvCfg := cfg.Server
 	httpHandler := ship.Default()
+	httpHandler.Use(middle.AccessLog)
+	if dir := srvCfg.Static; dir != "" {
+		httpHandler.Route("/").Static(dir)
+	}
 	httpHandler.Logger = logger.NewShip(logHandler, 6)
+
 	baseGroup := httpHandler.Group("/api")
 	if err := shipx.RegisterRoutes(baseGroup, shipRoutes); err != nil {
 		return err
 	}
 
-	srvCfg := cfg.Server
 	srv := &http.Server{
 		Addr:    srvCfg.Addr,
 		Handler: httpHandler,
+	}
+	if vhosts := srvCfg.Vhosts; len(vhosts) != 0 {
+		manager := ship.NewHostManager(nil)
+		for _, vhost := range vhosts {
+			if _, err := manager.AddHost(vhost, httpHandler); err != nil {
+				return err
+			}
+		}
+		srv.Handler = ship.NewHostManagerHandler(manager)
 	}
 	errs := make(chan error, 1)
 	go serveHTTP(errs, srv)

@@ -35,7 +35,7 @@ func (lg *Log) tail(c *ship.Context) error {
 	// 限制观察数
 	num := lg.lim.Add(1)
 	defer lg.lim.Add(-1)
-	if num > 10 {
+	if num > 5 {
 		c.Errorf("观测窗口超限")
 		return ship.ErrTooManyRequests
 	}

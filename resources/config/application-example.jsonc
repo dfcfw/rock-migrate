@@ -1,0 +1,34 @@
+{
+  "active": "",
+  "server": {
+    "addr": "0.0.0.0:30059",
+    "cert": "",
+    "pkey": "",
+    "static": "resources/static",
+    "vhosts": [
+    ]
+  },
+  "database": {
+    "source": "mongodb://src.mongodb.com:27017/rock?maxPoolSize=1024&connectTimeout=10s&readPreference=secondaryPreferred&readConcernLevel=majority",
+    "target": "mongodb://dest.mongodb.com/rock?maxPoolSize=1024&connectTimeout=10s&readPreference=secondaryPreferred&readConcernLevel=majority"
+  },
+  "logger": {
+    // 日志输出级别，请参考：https://github.com/golang/go/blob/go1.23.2/src/log/slog/level.go#L67-L75
+    "level": "DEBUG",
+    // 是否将日志输出到控制台，生成环境应该关闭，开发测试环境建议打开。
+    "console": false,
+    // 日志输出文件，不填写代表不输出到文件。
+    // https://github.com/natefinch/lumberjack/blob/v2.2.1/lumberjack.go#L80-L83
+    "filename": "resources/log/application.jsonl",
+    // https://github.com/natefinch/lumberjack/blob/v2.2.1/lumberjack.go#L85-L87
+    "maxsize": 0,
+    // https://github.com/natefinch/lumberjack/blob/v2.2.1/lumberjack.go#L89-L94
+    "maxage": 0,
+    // https://github.com/natefinch/lumberjack/blob/v2.2.1/lumberjack.go#L96-L99
+    "maxbackups": 0,
+    // https://github.com/natefinch/lumberjack/blob/v2.2.1/lumberjack.go#L101-L104
+    "localtime": true,
+    // https://github.com/natefinch/lumberjack/blob/v2.2.1/lumberjack.go#L106-L108
+    "compress": true
+  }
+}

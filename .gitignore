@@ -26,4 +26,5 @@ go.work.sum
 
 .crash.txt
 
+resources/log/*.jsonl
 resources/config/application.jsonc
